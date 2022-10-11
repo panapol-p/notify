@@ -7,9 +7,17 @@ import (
 	"github.com/pkg/errors"
 )
 
+//go:generate mockery --name=discordSession --output=. --case=underscore --inpackage
+type discordSession interface {
+	ChannelMessageSend(channelID string, content string) (*discordgo.Message, error)
+}
+
+// Compile-time check to ensure that discordgo.Session implements the discordSession interface.
+var _ discordSession = new(discordgo.Session)
+
 // Discord struct holds necessary data to communicate with the Discord API.
 type Discord struct {
-	client     *discordgo.Session
+	client     discordSession
 	channelIDs []string
 }
 
@@ -22,8 +30,8 @@ func New() *Discord {
 }
 
 // authenticate will try and authenticate to discord.
-func (d *Discord) authenticate(credentials ...string) error {
-	client, err := discordgo.New(credentials)
+func (d *Discord) authenticate(token string) error {
+	client, err := discordgo.New(token)
 	if err != nil {
 		return err
 	}
@@ -33,26 +41,6 @@ func (d *Discord) authenticate(credentials ...string) error {
 	d.client = client
 
 	return nil
-}
-
-// AuthenticateWithCredentials authenticates you to Discord via your email and password. Note that this
-// is highly discouraged by Discord. Please use an authentication token.
-// For more info, see here: https://pkg.go.dev/github.com/bwmarrin/discordgo@v0.22.1#New
-func (d *Discord) AuthenticateWithCredentials(email, password string) error {
-	return d.authenticate(email, password)
-}
-
-// AuthenticateWithCredentialsFull authenticates you to Discord via your email, password and access token.
-// This is what discord recommends.
-// For more info, see here: https://pkg.go.dev/github.com/bwmarrin/discordgo@v0.22.1#New
-func (d *Discord) AuthenticateWithCredentialsFull(email, password, token string, isOAuthToken bool) error {
-	if isOAuthToken {
-		token = parseOAuthToken(token)
-	} else {
-		token = parseBotToken(token)
-	}
-
-	return d.authenticate(email, password, token)
 }
 
 // AuthenticateWithBotToken authenticates you as a bot to Discord via the given access token.

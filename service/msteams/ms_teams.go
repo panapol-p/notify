@@ -3,21 +3,31 @@ package msteams
 import (
 	"context"
 
-	goteamsnotify "github.com/atc0005/go-teams-notify/v2"
+	teams "github.com/atc0005/go-teams-notify/v2"
 	"github.com/pkg/errors"
 )
 
+//go:generate mockery --name=teamsClient --output=. --case=underscore --inpackage
+type teamsClient interface {
+	SendWithContext(ctx context.Context, webhookURL string, webhookMessage teams.MessageCard) error
+	SkipWebhookURLValidationOnSend(skip bool) teams.API
+}
+
+// Compile-time check to ensure that teams.Client implements the teamsClient interface.
+var _ teamsClient = teams.NewClient()
+
 // MSTeams struct holds necessary data to communicate with the MSTeams API.
 type MSTeams struct {
-	client   goteamsnotify.API
+	client   teamsClient
 	webHooks []string
 }
 
 // New returns a new instance of a MSTeams notification service.
 // For more information about telegram api token:
-//    -> https://github.com/atc0005/go-teams-notify#example-basic
+//
+//	-> https://github.com/atc0005/go-teams-notify#example-basic
 func New() *MSTeams {
-	client := goteamsnotify.NewClient()
+	client := teams.NewClient()
 
 	m := &MSTeams{
 		client:   client,
@@ -30,7 +40,8 @@ func New() *MSTeams {
 // DisableWebhookValidation disables the validation of webhook URLs, including the validation of known prefixes so that
 // custom/private webhook URL endpoints can be used (e.g., testing purposes).
 // For more information about telegram api token:
-//    -> https://github.com/atc0005/go-teams-notify#example-disable-webhook-url-prefix-validation
+//
+//	-> https://github.com/atc0005/go-teams-notify#example-disable-webhook-url-prefix-validation
 func (m *MSTeams) DisableWebhookValidation() {
 	m.client.SkipWebhookURLValidationOnSend(true)
 }
@@ -44,9 +55,10 @@ func (m *MSTeams) AddReceivers(webHooks ...string) {
 // Send accepts a subject and a message body and sends them to all previously specified channels. Message body supports
 // html as markup language.
 // For more information about telegram api token:
-//    -> https://github.com/atc0005/go-teams-notify#example-basic
+//
+//	-> https://github.com/atc0005/go-teams-notify#example-basic
 func (m MSTeams) Send(ctx context.Context, subject, message string) error {
-	msgCard := goteamsnotify.NewMessageCard()
+	msgCard := teams.NewMessageCard()
 	msgCard.Title = subject
 	msgCard.Text = message
 

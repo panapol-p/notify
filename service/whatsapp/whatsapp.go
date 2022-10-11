@@ -21,6 +21,8 @@ const (
 var sessionFilePath = filepath.Join(os.TempDir(), "whatsappSession.gob")
 
 // whatsappClient abstracts go-whatsapp for writing unit tests
+//
+//go:generate mockery --name=whatsappClient --output=. --case=underscore --inpackage
 type whatsappClient interface {
 	Login(qrChan chan<- string) (whatsapp.Session, error)
 	RestoreWithSession(session whatsapp.Session) (whatsapp.Session, error)
@@ -40,11 +42,10 @@ func New() (*Service, error) {
 		return nil, err
 	}
 
-	s := &Service{
+	return &Service{
 		client:   client,
 		contacts: []string{},
-	}
-	return s, nil
+	}, nil
 }
 
 // LoginWithSessionCredentials provides helper for authentication using whatsapp.Session credentials.
@@ -60,13 +61,13 @@ func (s *Service) LoginWithSessionCredentials(clientID, clientToken, serverToken
 
 	session, err := s.client.RestoreWithSession(session)
 	if err != nil {
-		return fmt.Errorf("restoring session failed: %v", err)
+		return fmt.Errorf("restoring session failed: %w", err)
 	}
 
 	// Save the updated session for future use without login.
 	err = writeSession(&session)
 	if err != nil {
-		return fmt.Errorf("error saving session: %v", err)
+		return fmt.Errorf("error saving session: %w", err)
 	}
 
 	return nil
@@ -79,7 +80,7 @@ func (s *Service) LoginWithQRCode() error {
 	if err == nil {
 		session, err = s.client.RestoreWithSession(session)
 		if err != nil {
-			return fmt.Errorf("restoring session failed: %v", err)
+			return fmt.Errorf("restoring session failed: %w", err)
 		}
 	} else {
 		// No saved session found; need to login again.
@@ -91,13 +92,13 @@ func (s *Service) LoginWithQRCode() error {
 
 		session, err = s.client.Login(qr)
 		if err != nil {
-			return fmt.Errorf("error during login: %v", err)
+			return fmt.Errorf("error during login: %w", err)
 		}
 	}
 
 	err = writeSession(&session)
 	if err != nil {
-		return fmt.Errorf("error saving session: %v", err)
+		return fmt.Errorf("error saving session: %w", err)
 	}
 
 	<-time.After(qrLoginWaitTime)

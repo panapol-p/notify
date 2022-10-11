@@ -7,7 +7,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-const defaultParseMode = tgbotapi.ModeHTML
+const (
+	ModeMarkdown = tgbotapi.ModeMarkdown
+	ModeHTML     = tgbotapi.ModeHTML
+)
+
+var parseMode = ModeHTML // HTML is the default mode.
 
 // Telegram struct holds necessary data to communicate with the Telegram API.
 type Telegram struct {
@@ -17,7 +22,8 @@ type Telegram struct {
 
 // New returns a new instance of a Telegram notification service.
 // For more information about telegram api token:
-//    -> https://pkg.go.dev/github.com/go-telegram-bot-api/telegram-bot-api#NewBotAPI
+//
+//	-> https://pkg.go.dev/github.com/go-telegram-bot-api/telegram-bot-api#NewBotAPI
 func New(apiToken string) (*Telegram, error) {
 	client, err := tgbotapi.NewBotAPI(apiToken)
 	if err != nil {
@@ -32,6 +38,14 @@ func New(apiToken string) (*Telegram, error) {
 	return t, nil
 }
 
+// SetParseMode sets the parse mode for the message body.
+// For more information about telegram constants:
+//
+//	-> https://pkg.go.dev/github.com/go-telegram-bot-api/telegram-bot-api#pkg-constants
+func (t *Telegram) SetParseMode(mode string) {
+	parseMode = mode
+}
+
 // AddReceivers takes Telegram chat IDs and adds them to the internal chat ID list. The Send method will send
 // a given message to all those chats.
 func (t *Telegram) AddReceivers(chatIDs ...int64) {
@@ -44,7 +58,7 @@ func (t Telegram) Send(ctx context.Context, subject, message string) error {
 	fullMessage := subject + "\n" + message // Treating subject as message title
 
 	msg := tgbotapi.NewMessage(0, fullMessage)
-	msg.ParseMode = defaultParseMode
+	msg.ParseMode = parseMode
 
 	for _, chatID := range t.chatIDs {
 		select {

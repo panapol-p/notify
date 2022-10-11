@@ -5,11 +5,13 @@ import (
 	"errors"
 	"testing"
 
-	plivo "github.com/plivo/plivo-go"
+	"github.com/plivo/plivo-go/v7"
 	"github.com/stretchr/testify/require"
 )
 
-func TestNew(t *testing.T) {
+func TestPlivo_New(t *testing.T) {
+	t.Parallel()
+
 	assert := require.New(t)
 
 	// nil ClientOptions
@@ -33,7 +35,9 @@ func TestNew(t *testing.T) {
 	assert.NotNil(svc)
 }
 
-func TestAddReceivers(t *testing.T) {
+func TestPlivo_AddReceivers(t *testing.T) {
+	t.Parallel()
+
 	assert := require.New(t)
 
 	svc, err := New(&ClientOptions{}, &MessageOptions{Source: "12345"})
@@ -46,7 +50,9 @@ func TestAddReceivers(t *testing.T) {
 	assert.Equal(svc.destinations, nums)
 }
 
-func TestSend(t *testing.T) {
+func TestPlivo_Send(t *testing.T) {
+	t.Parallel()
+
 	assert := require.New(t)
 
 	svc, err := New(&ClientOptions{}, &MessageOptions{Source: "12345"})

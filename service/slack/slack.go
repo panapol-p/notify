@@ -7,15 +7,24 @@ import (
 	"github.com/slack-go/slack"
 )
 
+//go:generate mockery --name=slackClient --output=. --case=underscore --inpackage
+type slackClient interface {
+	PostMessageContext(ctx context.Context, channelID string, options ...slack.MsgOption) (string, string, error)
+}
+
+// Compile-time check to ensure that slack.Client implements the slackClient interface.
+var _ slackClient = new(slack.Client)
+
 // Slack struct holds necessary data to communicate with the Slack API.
 type Slack struct {
-	client     *slack.Client
+	client     slackClient
 	channelIDs []string
 }
 
 // New returns a new instance of a Slack notification service.
 // For more information about slack api token:
-//    -> https://pkg.go.dev/github.com/slack-go/slack#New
+//
+//	-> https://pkg.go.dev/github.com/slack-go/slack#New
 func New(apiToken string) *Slack {
 	client := slack.New(apiToken)
 

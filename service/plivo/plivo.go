@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	plivo "github.com/plivo/plivo-go"
+	plivo "github.com/plivo/plivo-go/v7"
 )
 
 // ClientOptions allow you to configure a Plivo SDK client.
@@ -28,6 +28,8 @@ type MessageOptions struct {
 }
 
 // plivoMsgClient abstracts Plivo SDK for writing unit tests
+//
+//go:generate mockery --name=plivoMsgClient --output=. --case=underscore --inpackage
 type plivoMsgClient interface {
 	Create(plivo.MessageCreateParams) (*plivo.MessageCreateResponseBody, error)
 }
